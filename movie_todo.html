@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie ToDo - Near Future Style</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #3674B5;
+      --primary-dark: #578FCA;
+      --accent: #FADA7A;
+      --bg: #F5F0CD;
+      --card: #fff;
+      --text: #222;
+      --shadow: none;
+      --radius: 20px;
+      --transition: 0.2s;
+    }
+    body {
+      font-family: 'Poppins', 'Noto Sans JP', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+    }
+    .dark {
+      --bg: #021526;
+      --card: #03346E;
+      --text: #E2E2B6;
+      --shadow: none;
+      --accent: #6EACDA;
+      --primary: #6EACDA;
+      --primary-dark: #578FCA;
+    }
+    .dark .movie-actions button {
+      background: var(--primary);
+      color: #fff;
+    }
+    .dark .movie-actions .delete-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .dark .form-row input,
+    .dark .form-row select,
+    .dark .form-row textarea {
+      background: #2d3748;
+      border-color: #4b5563;
+      color: #e5e7eb;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 24px 0 24px;
+    }
+    h1 {
+      font-size: 2.2em;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 1.5px;
+      margin: 0;
+      text-shadow: none;
+    }
+    .header-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 12px 32px;
+      font-size: 1.1em;
+      font-weight: 700;
+      box-shadow: none;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .add-btn:hover {
+      background: var(--primary);
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .form-section {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: none;
+      padding: 14px 10px 8px 10px;
+      margin-bottom: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      transition: box-shadow var(--transition);
+      backdrop-filter: blur(2.5px);
+    }
+    .form-section.active {
+      display: flex;
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      column-gap: 20px;
+      row-gap: 4px;
+      margin-bottom: 6px;
+    }
+    .form-row label {
+      min-width: 60px;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.98em;
+      margin: 0;
+      align-self: center;
+    }
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      flex: 1 1 180px;
+      border: 1.2px solid var(--primary-dark);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 0.97em;
+      background: var(--bg);
+      color: var(--text);
+      transition: border var(--transition), background var(--transition);
+      max-width: 260px;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      border-color: var(--primary);
+      background: var(--card);
+      outline: none;
+    }
+    .form-row textarea {
+      min-height: 32px;
+      resize: vertical;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .movie-list {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .movie-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: none;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 16px;
+      margin: 8px 0;
+      position: relative;
+      transition: box-shadow var(--transition), background var(--transition);
+    }
+    .movie-poster {
+      width: 90px;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: var(--card);
+      box-shadow: none;
+      flex-shrink: 0;
+    }
+    .movie-info {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    /* The .movie-title wraps both the title and the priority stars */
+    .movie-title {
+      font-size: 1.25em;
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .movie-priority {
+      color: #facc15;
+      font-size: 1.1em;
+      margin-left: 2px;
+    }
+    .movie-meta {
+      font-size: 0.98em;
+      color: var(--primary-dark);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .movie-memo {
+      font-size: 0.97em;
+      color: var(--text);
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+    .movie-link {
+      color: var(--accent);
+      text-decoration: underline;
+      font-size: 0.97em;
+      margin-top: 2px;
+      word-break: break-all;
+    }
+    .movie-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-end;
+      margin-left: 12px;
+    }
+    .movie-actions button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 18px;
+      font-size: 1em;
+      font-weight: 700;
+      box-shadow: none;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .movie-actions button:hover {
+      background: var(--primary-dark);
+    }
+    .movie-card.done {
+      background: var(--card);
+    }
+    .movie-card.done .movie-title,
+    .movie-card.done .movie-meta,
+    .movie-card.done .movie-memo {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    .movie-card.done .movie-actions button {
+      opacity: 1;
+      text-decoration: none;
+    }
+    .search-sort {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .search-sort input, .search-sort select {
+      border: 1.5px solid var(--primary-dark);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 1em;
+      background: var(--bg);
+      color: var(--text);
+      transition: border var(--transition), background var(--transition);
+    }
+    .search-sort input:focus, .search-sort select:focus {
+      border-color: var(--primary);
+      background: var(--card);
+      outline: none;
+    }
+    @media (max-width: 600px) {
+      header, main {
+        padding: 0;
+        max-width: 100vw;
+      }
+      header {
+        padding: 16px 16px 0 16px;
+        margin-bottom: 8px;
+      }
+      main {
+        width: 100vw;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+      .form-section, .movie-list {
+        max-width: 100vw;
+        border-radius: 0;
+        padding-left: 0;
+        padding-right: 0;
+      }
+      .form-section {
+        padding: 8px 4px 4px 4px;
+        margin: 0 8px 20px 8px;
+        width: calc(100% - 16px);
+        box-sizing: border-box;
+      }
+      .movie-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px 2px;
+        border-radius: 0;
+        margin: 8px;
+        box-sizing: border-box;
+      }
+      .movie-poster {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 3 / 4;
+        max-height: 280px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 8px;
+      }
+      .movie-info {
+        flex: 1 1 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 4px;
+        padding: 0 12px;
+      }
+      .movie-actions {
+        flex-direction: row;
+        gap: 4px;
+        margin-left: 0;
+        margin-top: 6px;
+        justify-content: flex-end;
+      }
+      .form-actions {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+        width: 100%;
+      }
+      .form-row label {
+        margin: 0;
+      }
+      .form-row input,
+      .form-row select,
+      .form-row textarea {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+      .search-sort {
+        padding: 0 16px;
+      }
+
+      /* Stack title and priority vertically on mobile */
+      .movie-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+      .movie-title .movie-priority {
+        margin-left: 0;
+      }
+      #cancel-btn {
+        padding-right: 0 !important;
+      }
+    }
+    #duration {
+      max-width: 150px;
+    }
+    #priority {
+      max-width: 120px;
+    }
+    #type {
+      max-width: 150px;
+    }
+    #genre {
+      max-width: 180px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Movie ToDo</h1>
+    <div class="header-actions">
+      <button class="add-btn" id="show-form">新しいToDo</button>
+    </div>
+  </header>
+  <main>
+    <section class="form-section" id="add-form">
+      <div id="form-error" style="display:none;color:#e06c75;font-weight:900;font-size:1.08em;margin-bottom:8px;text-align:center;"></div>
+      <div class="form-row">
+        <label for="title">タイトル*</label>
+        <input type="text" id="title" required placeholder="映画タイトル" style="flex:2 1 180px;max-width:260px;" />
+      </div>
+      <div class="form-row">
+        <label for="type">タイプ</label>
+        <select id="type">
+          <option value="洋画">洋画</option>
+          <option value="邦画">邦画</option>
+        </select>
+        <label for="genre">ジャンル</label>
+        <select id="genre">
+          <option value="アクション">アクション</option>
+          <option value="コメディ">コメディ</option>
+          <option value="ドラマ">ドラマ</option>
+          <option value="ホラー">ホラー</option>
+          <option value="SF">SF</option>
+          <option value="ファンタジー">ファンタジー</option>
+          <option value="ロマンス">ロマンス</option>
+          <option value="サスペンス">サスペンス</option>
+          <option value="ミステリー">ミステリー</option>
+          <option value="アニメ">アニメ</option>
+          <option value="ドキュメンタリー">ドキュメンタリー</option>
+        </select>
+        <label for="priority">優先度</label>
+        <select id="priority">
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3">★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5">★★★★★</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="duration">時間</label>
+        <input type="time" id="duration" min="00:00" max="06:59" step="60" value="00:00" />
+
+        <label for="year">公開西暦</label>
+        <input type="number" id="year" min="1900" max="2100" placeholder="例:2023" style="max-width:90px;" />
+
+        <label for="poster">宣伝画像</label>
+        <input type="url" id="poster" placeholder="画像URL" style="max-width:140px;" />
+      </div>
+      <div class="form-row">
+        <label for="memo">メモ</label>
+        <textarea id="memo" placeholder="メモや感想など" style="flex:2 1 180px;max-width:260px;"></textarea>
+        <label for="link">リンク</label>
+        <input type="url" id="link" placeholder="公式サイトや予告編URL" style="max-width:180px;" />
+      </div>
+      <div class="form-actions">
+        <button class="add-btn" id="add-btn">追加</button>
+        <button class="add-btn" id="cancel-btn" style="background:var(--card);color:var(--primary);">キャンセル</button>
+      </div>
+    </section>
+    <section class="search-sort">
+      <input type="text" id="search" placeholder="タイトル・メモで検索" />
+      <select id="sort">
+        <option value="created">追加順</option>
+        <option value="priority">優先度順</option>
+        <option value="title">タイトル順</option>
+        <option value="done">未完了優先</option>
+      </select>
+      <div id="filter-status" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+        <button id="filter-all" class="filter-btn" style="padding: 6px 12px; border-radius: 8px; border: none; background: var(--primary); color: #fff; font-weight: 700;">すべて</button>
+        <button id="filter-undone" class="filter-btn" style="padding: 6px 12px; border-radius: 8px; border: none; background: var(--card); color: var(--primary); font-weight: 700;">未完了</button>
+        <button id="filter-done" class="filter-btn" style="padding: 6px 12px; border-radius: 8px; border: none; background: var(--card); color: var(--primary); font-weight: 700;">完了</button>
+        <button id="settings-btn" style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-size:1.2em;display:flex;align-items:center;justify-content:center;border:none;box-shadow:none;cursor:pointer;">⚙️</button>
+      </div>
+    </section>
+    <section class="movie-list" id="movie-list"></section>
+  </main>
+  <!-- 設定パネル -->
+  <div id="settings-modal" style="display:none;position:fixed;z-index:1002;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div style="background:var(--card);border-radius:18px;padding:32px 24px;min-width:280px;max-width:90vw;box-sizing:border-box;position:relative;">
+      <button id="close-settings" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5em;color:var(--primary);cursor:pointer;">✕</button>
+      <h2 style="margin-top:0;color:var(--primary);font-size:1.2em;font-weight:900;">設定</h2>
+      <div style="margin-bottom:18px;">
+        <button id="toggle-theme-modal" style="background:var(--primary);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-size:1em;font-weight:700;cursor:pointer;">🌓 モード切替</button>
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="font-weight:700;color:var(--primary);margin-bottom:6px;display:block;">背景画像をアップロード</label>
+        <input type="file" id="bg-upload" accept="image/*" style="margin-bottom:8px;" />
+        <button id="reset-bg" style="background:var(--card);color:var(--primary);border:none;border-radius:10px;padding:6px 16px;font-weight:700;cursor:pointer;">背景画像リセット</button>
+      </div>
+      <div id="bg-preview" style="margin-top:10px;"></div>
+    </div>
+  </div>
+  <script>
+    // --- localStorage helpers ---
+    function saveTodos(todos) {
+      localStorage.setItem('movieTodos', JSON.stringify(todos));
+    }
+    function loadTodos() {
+      return JSON.parse(localStorage.getItem('movieTodos') || '[]');
+    }
+    function saveTheme(isDark) {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+    function loadTheme() {
+      return localStorage.getItem('theme') || 'light';
+    }
+    // --- State ---
+    let todos = loadTodos();
+    let isDark = loadTheme() === 'dark';
+    let searchValue = '';
+    let sortValue = 'created';
+    let filterStatus = 'all';
+    // --- DOM refs ---
+    const body = document.body;
+    const showFormBtn = document.getElementById('show-form');
+    const addForm = document.getElementById('add-form');
+    const addBtn = document.getElementById('add-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const movieList = document.getElementById('movie-list');
+    const searchInput = document.getElementById('search');
+    const sortSelect = document.getElementById('sort');
+    const filterAllBtn = document.getElementById('filter-all');
+    const filterUndoneBtn = document.getElementById('filter-undone');
+    const filterDoneBtn = document.getElementById('filter-done');
+
+    filterAllBtn.addEventListener('click', () => {
+      filterStatus = 'all';
+      updateFilterButtons('filter-all');
+      renderTodos();
+    });
+    filterUndoneBtn.addEventListener('click', () => {
+      filterStatus = 'undone';
+      updateFilterButtons('filter-undone');
+      renderTodos();
+    });
+    filterDoneBtn.addEventListener('click', () => {
+      filterStatus = 'done';
+      updateFilterButtons('filter-done');
+      renderTodos();
+    });
+    // --- Filter Buttons Active Styling ---
+    function updateFilterButtons(activeId) {
+      [filterAllBtn, filterUndoneBtn, filterDoneBtn].forEach(btn => {
+        if (btn.id === activeId) {
+          btn.style.background = 'var(--primary)';
+          btn.style.color = '#fff';
+        } else {
+          btn.style.background = 'var(--card)';
+          btn.style.color = 'var(--primary)';
+        }
+      });
+    }
+    // --- Theme ---
+    function applyTheme() {
+      if (isDark) {
+        body.classList.add('dark');
+      } else {
+        body.classList.remove('dark');
+      }
+      saveTheme(isDark);
+    }
+    applyTheme();
+    // --- Show/Hide Form ---
+    showFormBtn.addEventListener('click', () => {
+      addForm.classList.add('active');
+    });
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      addForm.classList.remove('active');
+      addForm.reset && addForm.reset();
+    });
+    // --- Add ToDo ---
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const errorDiv = document.getElementById('form-error');
+      const title = document.getElementById('title').value.trim();
+      const type = document.getElementById('type').value;
+      const genre = document.getElementById('genre').value;
+      const durationRaw = document.getElementById('duration').value;
+      let duration = '';
+      if (durationRaw && durationRaw.includes(':')) {
+        const [h, m] = durationRaw.split(':');
+        duration = `${parseInt(h,10)}時間${parseInt(m,10)}分`;
+      }
+      const year = document.getElementById('year').value;
+      const priority = document.getElementById('priority').value;
+      const poster = document.getElementById('poster').value.trim();
+      const memo = document.getElementById('memo').value.trim();
+      const link = document.getElementById('link').value.trim();
+      if (!title) {
+        errorDiv.textContent = 'タイトルは必須です';
+        errorDiv.style.display = 'block';
+        document.getElementById('title').focus();
+        return;
+      }
+      errorDiv.style.display = 'none';
+      todos.push({
+        title, type, genre, duration, year, priority: Number(priority), poster, memo, link, done: false, created: Date.now()
+      });
+      saveTodos(todos);
+      renderTodos();
+      addForm.classList.remove('active');
+      addForm.reset && addForm.reset();
+    });
+    // 入力時にエラーを消す
+    document.getElementById('title').addEventListener('input', () => {
+      const errorDiv = document.getElementById('form-error');
+      if (document.getElementById('title').value.trim()) {
+        errorDiv.style.display = 'none';
+      }
+    });
+    // --- Render ToDos ---
+    function renderTodos() {
+      let filtered = todos.filter(todo => {
+        return (
+          (!searchValue || todo.title.includes(searchValue) || (todo.memo && todo.memo.includes(searchValue)))
+        );
+      });
+      if (sortValue === 'priority') {
+        filtered.sort((a, b) => b.priority - a.priority);
+      } else if (sortValue === 'title') {
+        filtered.sort((a, b) => a.title.localeCompare(b.title, 'ja'));
+      } else if (sortValue === 'done') {
+        filtered.sort((a, b) => Number(a.done) - Number(b.done));
+      } else {
+        filtered.sort((a, b) => a.created - b.created);
+      }
+      if (filterStatus === 'done') filtered = filtered.filter(t => t.done);
+      else if (filterStatus === 'undone') filtered = filtered.filter(t => !t.done);
+      movieList.innerHTML = '';
+      filtered.forEach((todo, idx) => {
+        const card = document.createElement('div');
+        card.className = 'movie-card' + (todo.done ? ' done' : '');
+        // Poster
+        let poster = todo.poster ? `<img class="movie-poster" src="${todo.poster}" alt="poster" onerror="this.style.display='none'">` : `<div class="movie-poster" style="display:flex;align-items:center;justify-content:center;color:#bcd;">🎬</div>`;
+        // Priority stars
+        let stars = '★'.repeat(todo.priority);
+        // Info
+        card.innerHTML = `
+          ${poster}
+          <div class="movie-info">
+            <div class="movie-title">${todo.title} <span class="movie-priority">${stars}</span></div>
+            <div class="movie-meta">
+              <span>${todo.type}</span>
+              <span>${todo.genre}</span>
+              <span>${todo.duration}</span>
+              <span>${todo.year ? todo.year + '年' : ''}</span>
+            </div>
+            ${todo.memo ? `<div class="movie-memo">${todo.memo}</div>` : ''}
+            ${todo.link ? `<a class="movie-link" href="${todo.link}" target="_blank">外部リンク</a>` : ''}
+          </div>
+          <div class="movie-actions" data-idx="${idx}">
+            <button onclick="toggleDone(${idx})">${todo.done ? '未完了に戻す' : '完了'}</button>
+            <button class="delete-btn" style="background:var(--accent);">削除</button>
+          </div>
+        `;
+        movieList.appendChild(card);
+      });
+      // 削除ボタンのイベントを付与
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = function(e) {
+          const actions = btn.parentElement;
+          if (actions.querySelector('.delete-confirm')) return;
+          const idx = actions.getAttribute('data-idx');
+          const confirmDiv = document.createElement('div');
+          confirmDiv.className = 'delete-confirm';
+          confirmDiv.style = 'margin-top:8px;text-align:right;';
+          confirmDiv.innerHTML = `<span style='color:var(--accent);font-weight:700;margin-right:8px;'>本当に削除しますか？</span><button style='background:var(--accent);color:#fff;margin-right:4px;border-radius:8px;padding:4px 12px;border:none;font-weight:700;cursor:pointer;'>はい</button><button style='background:var(--card);color:var(--primary);border-radius:8px;padding:4px 12px;border:none;font-weight:700;cursor:pointer;'>キャンセル</button>`;
+          const [yesBtn, cancelBtn] = confirmDiv.querySelectorAll('button');
+          yesBtn.onclick = function(ev) {
+            deleteTodo(idx);
+          };
+          cancelBtn.onclick = function(ev) {
+            confirmDiv.remove();
+          };
+          actions.appendChild(confirmDiv);
+        };
+      });
+    }
+    // --- Toggle Done ---
+    window.toggleDone = function(idx) {
+      todos[idx].done = !todos[idx].done;
+      saveTodos(todos);
+      renderTodos();
+    }
+    // --- Delete ToDo ---
+    window.deleteTodo = function(idx) {
+      todos.splice(idx, 1);
+      saveTodos(todos);
+      renderTodos();
+    }
+    // --- Search & Sort ---
+    searchInput.addEventListener('input', e => {
+      searchValue = e.target.value.trim();
+      renderTodos();
+    });
+    sortSelect.addEventListener('change', e => {
+      sortValue = e.target.value;
+      renderTodos();
+    });
+    // --- 初期表示 ---
+    updateFilterButtons('filter-all');
+    renderTodos();
+    // --- 設定ボタン・モーダル ---
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettings = document.getElementById('close-settings');
+    const toggleThemeModalBtn = document.getElementById('toggle-theme-modal');
+    const bgUpload = document.getElementById('bg-upload');
+    const resetBgBtn = document.getElementById('reset-bg');
+    const bgPreview = document.getElementById('bg-preview');
+    // 歯車ボタンで設定パネル表示
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'flex';
+      // プレビュー
+      const bg = localStorage.getItem('customBg');
+      if (bg) {
+        bgPreview.innerHTML = `<img src="${bg}" alt="bg" style="max-width:180px;max-height:80px;border-radius:8px;box-shadow:0 1px 4px #0002;">`;
+      } else {
+        bgPreview.innerHTML = '';
+      }
+    });
+    closeSettings.addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+    });
+    // モーダル外クリックで閉じる
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) settingsModal.style.display = 'none';
+    });
+    // テーマ切替（モーダル内）
+    toggleThemeModalBtn.addEventListener('click', () => {
+      isDark = !isDark;
+      applyTheme();
+    });
+    // 背景画像アップロード
+    bgUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataURL = evt.target.result;
+        document.body.style.backgroundImage = `url(${dataURL})`;
+        localStorage.setItem('customBg', dataURL);
+        bgPreview.innerHTML = `<img src="${dataURL}" alt="bg" style="max-width:180px;max-height:80px;border-radius:8px;box-shadow:0 1px 4px #0002;">`;
+      };
+      reader.readAsDataURL(file);
+    });
+    // 背景画像リセット
+    resetBgBtn.addEventListener('click', () => {
+      document.body.style.backgroundImage = '';
+      localStorage.removeItem('customBg');
+      bgPreview.innerHTML = '';
+    });
+    // ページロード時に背景画像適用
+    const savedBg = localStorage.getItem('customBg');
+    if (savedBg) {
+      document.body.style.backgroundImage = `url(${savedBg})`;
+    }
+  </script>
+</body>
+</html> 
